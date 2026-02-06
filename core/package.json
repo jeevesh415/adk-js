@@ -42,8 +42,10 @@
   "dependencies": {
     "@google/genai": "^1.37.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "drizzle-orm": "^0.45.1",
     "google-auth-library": "^10.3.0",
     "lodash-es": "^4.17.23",
+    "pg": "^8.18.0",
     "zod": "^4.2.1",
     "zod-to-json-schema": "^3.25.1"
   },

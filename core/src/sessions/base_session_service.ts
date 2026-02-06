@@ -153,7 +153,7 @@ export abstract class BaseSessionService {
    *
    * @param request The request to update the session state.
    */
-  private updateSessionState({session, event}: AppendEventRequest): void {
+  protected updateSessionState({session, event}: AppendEventRequest): void {
     if (!event.actions || !event.actions.stateDelta) {
       return;
     }

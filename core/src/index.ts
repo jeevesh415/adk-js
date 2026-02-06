@@ -6,6 +6,7 @@
 
 export * from './artifacts/gcs_artifact_service.js';
 export * from './common.js';
+export * from './sessions/postgres_session_service.js';
 export * from './telemetry/google_cloud.js';
 export * from './telemetry/setup.js';
 export * from './tools/mcp/mcp_session_manager.js';
