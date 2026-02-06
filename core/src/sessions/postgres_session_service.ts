@@ -5,7 +5,6 @@
  */
 
 import {and, desc, eq} from 'drizzle-orm';
-import {getDb, PostgresDB, schema} from '../db/postgres/index.js';
 import {Event} from '../events/event.js';
 import {
   AppendEventRequest,
@@ -16,6 +15,7 @@ import {
   ListSessionsRequest,
   ListSessionsResponse,
 } from './base_session_service.js';
+import {getDb, PostgresDB, schema} from './db/postgres/index.js';
 import {createSession, Session} from './session.js';
 import {extractStateDelta, mergeState} from './state_utils.js';
 

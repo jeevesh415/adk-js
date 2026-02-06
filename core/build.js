@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import esbuild from 'esbuild';
+import {exec} from 'node:child_process';
 import {writeFile} from 'node:fs/promises';
+import {promisify} from 'node:util';
+
+const execAsync = promisify(exec);
 
 const platformBuildTargets = {
   'node': ['node10.4'],
@@ -95,6 +99,13 @@ async function main() {
         bundle,
       }),
     ]);
+
+    execAsync(
+      'cp -r ./src/sessions/db/postgres/migrations ./dist/esm/sessions/db/postgres/migrations',
+    );
+    execAsync(
+      'cp -r ./src/sessions/db/postgres/migrations ./dist/cjs/sessions/db/postgres/migrations',
+    );
 
     // Create package.json for cjs to ensure Node.js treats it as commonjs.
     await writeFile('./dist/cjs/package.json', '{"type": "commonjs"}');

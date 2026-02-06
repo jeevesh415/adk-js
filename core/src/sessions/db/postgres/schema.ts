@@ -14,7 +14,7 @@ import {
   primaryKey,
   text,
 } from 'drizzle-orm/pg-core';
-import {Event} from '../../events/event.js';
+import {Event} from '../../../events/event.js';
 
 /**
  * The internal metadata table.

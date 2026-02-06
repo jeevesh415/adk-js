@@ -1,16 +1,16 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import {createEvent, PostgresSessionService} from '@google/adk';
 import {PgTransaction} from 'drizzle-orm/pg-core';
 import {afterEach, beforeEach, describe, expect, it, Mock, vi} from 'vitest';
-import * as dbFuncs from '../../src/db/postgres/index.js';
+import * as dbFuncs from '../../src/sessions/db/postgres/index.js';
 
 // Mock the DB module
-vi.mock('../../src/db/postgres/index.js');
+vi.mock('../../src/sessions/db/postgres/index.js');
 
 describe('PostgresSessionService', () => {
   let service: PostgresSessionService;
@@ -61,7 +61,12 @@ describe('PostgresSessionService', () => {
       transaction: vi.fn(),
     };
     // Mock getDb to return our mock
-    vi.spyOn(dbFuncs, 'getDb').mockReturnValue(mockDb);
+    vi.spyOn(dbFuncs, 'getDb').mockReturnValue(
+      mockDb as unknown as dbFuncs.PostgresDB,
+    );
+
+    process.env.DATABASE_URL =
+      'postgres://user:password@localhost:5432/adk_test';
   });
 
   afterEach(() => {
@@ -69,18 +74,26 @@ describe('PostgresSessionService', () => {
   });
 
   it('createSession inserts into DB and returns session', async () => {
-    const mockSession = {
-      id: 'sess-1',
-      appName: 'app1',
-      userId: 'user1',
-      state: {foo: 'bar'},
-      lastUpdateTime: 1000n,
-      createTime: 1000n,
-    };
+    // const mockSession = {
+    //   id: 'sess-1',
+    //   appName: 'app1',
+    //   userId: 'user1',
+    //   state: {foo: 'bar'},
+    //   lastUpdateTime: 1000n,
+    //   createTime: 1000n,
+    // };
 
     // Mock transaction to simulate behavior
     mockDb.transaction.mockImplementation(
-      async (callback: (tx: PgTransaction<unknown>) => Promise<void>) => {
+      async (
+        callback: (
+          tx: PgTransaction<{
+            readonly $brand: 'PgQueryResultHKT';
+            readonly row: unknown;
+            readonly type: unknown;
+          }>,
+        ) => Promise<void>,
+      ) => {
         const tx = {
           insert: vi.fn().mockReturnThis(),
           values: vi.fn().mockReturnThis(),
@@ -93,7 +106,11 @@ describe('PostgresSessionService', () => {
           update: vi.fn().mockReturnThis(),
           set: vi.fn().mockReturnThis(),
           where: vi.fn().mockReturnThis(),
-        };
+        } as unknown as PgTransaction<{
+          readonly $brand: 'PgQueryResultHKT';
+          readonly row: unknown;
+          readonly type: unknown;
+        }>;
 
         // Override for specific inserts if needed, but for now generic return is fine
         // The session insert doesn't return in the new implementation (it returns via createSession logic)

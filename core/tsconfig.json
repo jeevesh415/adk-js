@@ -4,6 +4,6 @@
     "rootDir": "src",
     "outDir": "dist/types"
   },
-  "include": ["src/**/*", "test/sessions/postgres_session_service_test.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

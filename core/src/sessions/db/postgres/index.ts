@@ -12,6 +12,13 @@ type PostgresDB = ReturnType<typeof drizzle<typeof schema>>;
 
 let dbInstance: PostgresDB | undefined;
 
+/**
+ * Checks if the given connection string is a Postgres connection string.
+ */
+export function isPostgresConnectionString(connectionString: string): boolean {
+  return connectionString.startsWith('postgresql://');
+}
+
 export function getDb(connectionString?: string): PostgresDB {
   if (!dbInstance) {
     if (!connectionString) {
@@ -22,9 +29,9 @@ export function getDb(connectionString?: string): PostgresDB {
       throw new Error('DATABASE_URL environment variable is not set');
     }
 
-    if (!connectionString.startsWith('postgres://')) {
+    if (!isPostgresConnectionString(connectionString)) {
       throw new Error(
-        'Invalid DATABASE_URL. It should start with "postgres://".',
+        'Invalid DATABASE_URL. It should start with "postgresql://".',
       );
     }
 

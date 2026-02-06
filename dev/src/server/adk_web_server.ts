@@ -672,6 +672,7 @@ export class AdkWebServer {
         if (res.headersSent) {
           res.end(`data: ${JSON.stringify({error: (e as Error).message})}\n\n`);
         } else {
+          console.error(e);
           res.status(500).json({error: (e as Error).message});
         }
       }

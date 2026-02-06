@@ -9,7 +9,9 @@ import {
   BaseArtifactService,
   GcsArtifactService,
   LogLevel,
+  resolveDatabaseServiceFromUri,
   setLogLevel,
+  setupDatabase,
 } from '@google/adk';
 import {Argument, Command, Option} from 'commander';
 import dotenv from 'dotenv';
@@ -109,6 +111,9 @@ const LOG_LEVEL_OPTION = new Option(
   '--log_level <string>',
   'Optional. The log level of the server',
 ).default('info');
+const SESSION_SERVICE_URI_OPTION = new Option(
+  '--session_service_uri <string>, Optional. The URI of the session service, supported URIs: postgresql://<user>:<password>@<host>:<port>/<database> for Postgres session service.',
+);
 const ARTIFACT_SERVICE_URI_OPTION = new Option(
   '--artifact_service_uri <string>, Optional. The URI of the artifact service, supported URIs: gs://<bucket name> for GCS artifact service.',
 );
@@ -144,6 +149,7 @@ program
   .addOption(ORIGINS_OPTION)
   .addOption(VERBOSE_OPTION)
   .addOption(LOG_LEVEL_OPTION)
+  .addOption(SESSION_SERVICE_URI_OPTION)
   .addOption(ARTIFACT_SERVICE_URI_OPTION)
   .addOption(OTEL_TO_CLOUD_OPTION)
   .addOption(COMPILE_AGENT_FILE)
@@ -158,6 +164,9 @@ program
       port: parseInt(options['port'], 10),
       serveDebugUI: true,
       allowOrigins: options['allow_origins'],
+      sessionService: resolveDatabaseServiceFromUri(
+        options['session_service_uri'],
+      ),
       artifactService: options['artifact_service_uri']
         ? getArtifactServiceFromUri(options['artifact_service_uri'])
         : undefined,
@@ -177,6 +186,7 @@ program
   .addOption(ORIGINS_OPTION)
   .addOption(VERBOSE_OPTION)
   .addOption(LOG_LEVEL_OPTION)
+  .addOption(SESSION_SERVICE_URI_OPTION)
   .addOption(ARTIFACT_SERVICE_URI_OPTION)
   .addOption(OTEL_TO_CLOUD_OPTION)
   .addOption(COMPILE_AGENT_FILE)
@@ -191,6 +201,9 @@ program
       port: parseInt(options['port'], 10),
       serveDebugUI: false,
       allowOrigins: options['allow_origins'],
+      sessionService: resolveDatabaseServiceFromUri(
+        options['session_service_uri'],
+      ),
       artifactService: options['artifact_service_uri']
         ? getArtifactServiceFromUri(options['artifact_service_uri'])
         : undefined,
@@ -257,6 +270,7 @@ program
   )
   .addOption(VERBOSE_OPTION)
   .addOption(LOG_LEVEL_OPTION)
+  .addOption(SESSION_SERVICE_URI_OPTION)
   .addOption(ARTIFACT_SERVICE_URI_OPTION)
   .addOption(OTEL_TO_CLOUD_OPTION)
   .addOption(COMPILE_AGENT_FILE)
@@ -271,6 +285,9 @@ program
       savedSessionFile: options['resume'],
       saveSession: getBoolean(options['save_session']),
       sessionId: options['session_id'],
+      sessionService: resolveDatabaseServiceFromUri(
+        options['session_service_uri'],
+      ),
       artifactService: options['artifact_service_uri']
         ? getArtifactServiceFromUri(options['artifact_service_uri'])
         : undefined,
@@ -319,6 +336,7 @@ DEPLOY_COMMAND.command('cloud_run')
   .addOption(ORIGINS_OPTION)
   .addOption(VERBOSE_OPTION)
   .addOption(LOG_LEVEL_OPTION)
+  .addOption(SESSION_SERVICE_URI_OPTION)
   .addOption(ARTIFACT_SERVICE_URI_OPTION)
   .addOption(COMPILE_AGENT_FILE)
   .addOption(BUNDLE_AGENT_FILE)
@@ -348,10 +366,36 @@ DEPLOY_COMMAND.command('cloud_run')
       logLevel: options['log_level'],
       adkVersion: options['adk_version'],
       allowOrigins: options['allow_origins'],
-      extraGcloudArgs,
+      sessionServiceUri: options['session_service_uri'],
       artifactServiceUri: options['artifact_service_uri'],
       agentFileLoadOptions: getAgentFileOptions(options),
+      extraGcloudArgs,
     });
+  });
+
+program
+  .command('setup_session_db')
+  .description('Setup session service database')
+  .addOption(SESSION_SERVICE_URI_OPTION)
+  .action(async (options: Record<string, string>) => {
+    try {
+      let connectionString = options['session_service_uri'];
+
+      if (!connectionString && process.env.DATABASE_URL) {
+        connectionString = process.env.DATABASE_URL;
+      }
+
+      if (!connectionString) {
+        throw new Error('Session service URI is not set');
+      }
+
+      console.log('Setting up session database...');
+      await setupDatabase(connectionString);
+      console.log('Session database setup completed!');
+    } catch (e) {
+      console.error('Failed to setup session database!');
+      console.error(e);
+    }
   });
 
 try {
