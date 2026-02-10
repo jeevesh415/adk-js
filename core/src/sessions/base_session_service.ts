@@ -142,6 +142,8 @@ export abstract class BaseSessionService {
       return event;
     }
 
+    event = this.trimTempDeltaState(event);
+
     this.updateSessionState({session, event});
     session.events.push(event);
 
@@ -163,5 +165,25 @@ export abstract class BaseSessionService {
       }
       session.state[key] = value;
     }
+  }
+
+  /**
+   * Removes temporary state delta keys from the event.
+   */
+  protected trimTempDeltaState(event: Event): Event {
+    if (!event.actions || !event.actions.stateDelta) {
+      return event;
+    }
+
+    const stateDelta = event.actions.stateDelta;
+    const filteredStateDelta: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(stateDelta)) {
+      if (!key.startsWith(State.TEMP_PREFIX)) {
+        filteredStateDelta[key] = value;
+      }
+    }
+
+    event.actions.stateDelta = filteredStateDelta;
+    return event;
   }
 }
