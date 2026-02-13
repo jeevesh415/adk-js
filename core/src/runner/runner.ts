@@ -20,7 +20,7 @@ import {
   BuiltInCodeExecutor,
   isBuiltInCodeExecutor,
 } from '../code_executors/built_in_code_executor.js';
-import {AgentEvent} from '../events/agent_event.js';
+import {AgentEvent, AgentEventType} from '../events/agent_event.js';
 import {
   createEvent,
   Event,
@@ -99,7 +99,7 @@ export class Runner {
     runConfig?: RunConfig;
   }): AsyncGenerator<AgentEvent, void, undefined> {
     for await (const event of this.runAsync(params)) {
-      yield* this.convertEventToAgentEvents(event);
+      yield* convertEventToAgentEvents(event);
     }
   }
 
@@ -443,74 +443,77 @@ export class Runner {
     return true;
   }
   // TODO - b/425992518: Implement runLive and related methods.
+}
 
-  /**
-   * Converts an internal Event to a standardized AgentEvent stream.
-   *
-   * @param event The internal Event.
-   * @yields The AgentEvent stream.
-   */
-  private *convertEventToAgentEvents(
-    event: Event,
-  ): IterableIterator<AgentEvent> {
-    if (event.errorCode) {
-      yield {
-        type: 'error',
-        error: new Error(event.errorMessage || event.errorCode),
-      };
-      return;
-    }
+/**
+ * Converts an internal Event to a standardized AgentEvent stream.
+ *
+ * @param event The internal Event.
+ * @yields The AgentEvent stream.
+ */
+export function* convertEventToAgentEvents(
+  event: Event,
+): IterableIterator<AgentEvent> {
+  if (event.errorCode) {
+    yield {
+      type: AgentEventType.ERROR,
+      error: new Error(event.errorMessage || event.errorCode),
+    };
+    return;
+  }
 
-    if (event.content && event.content.parts) {
-      for (const part of event.content.parts) {
-        // Check for Function Call
-        if (part.functionCall) {
-          yield {type: 'tool_call', call: part.functionCall};
-        }
+  if (event.content && event.content.parts) {
+    for (const part of event.content.parts) {
+      // Check for Function Call
+      if (part.functionCall) {
+        yield {type: AgentEventType.TOOL_CALL, call: part.functionCall};
+      }
 
-        // Check for Function Response
-        if (part.functionResponse) {
-          // In ADK, function responses are usually user-authored events, but mapped here.
-          yield {type: 'tool_result', result: part.functionResponse};
-        }
+      // Check for Function Response
+      if (part.functionResponse) {
+        // In ADK, function responses are usually user-authored events, but mapped here.
+        yield {
+          type: AgentEventType.TOOL_RESULT,
+          result: part.functionResponse,
+        };
+      }
 
-        // Check for Text (Content or Thought)
-        if (part.text) {
-          // Check for thought property (runtime check as it's not in standard Part type)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if ((part as any).thought) {
-            yield {type: 'thought', content: part.text};
-          } else {
-            yield {type: 'content', content: part.text};
-          }
+      // Check for Text (Content or Thought)
+      if (part.text) {
+        // Check for thought property (runtime check as it's not in standard Part type)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((part as any).thought) {
+          yield {type: AgentEventType.THOUGHT, content: part.text};
+        } else {
+          yield {type: AgentEventType.CONTENT, content: part.text};
         }
       }
     }
+  }
 
-    // Check for Activities (e.g. Tool Confirmation)
-    if (
-      event.actions?.requestedToolConfirmations &&
-      Object.keys(event.actions.requestedToolConfirmations).length > 0
-    ) {
-      yield {
-        type: 'activity',
-        kind: 'tool_confirmation_request',
-        detail: event.actions.requestedToolConfirmations as unknown as Record<
-          string,
-          unknown
-        >,
-      };
-    }
+  // Check for Activities (e.g. Tool Confirmation)
+  if (
+    event.actions?.requestedToolConfirmations &&
+    Object.keys(event.actions.requestedToolConfirmations).length > 0
+  ) {
+    yield {
+      type: AgentEventType.ACTIVITY,
+      kind: 'tool_confirmation_request',
+      detail: event.actions.requestedToolConfirmations as unknown as Record<
+        string,
+        unknown
+      >,
+    };
+  }
 
-    // Check for Finish
-    if (isFinalResponse(event)) {
-      // Determine output.
-      // We look for stateDelta outputKey or just the final text.
-      // But usually `finished` event just signals completion.
-      // For now, we yield a finished event with null output if not found.
-      // Ideally we extract the final result.
-      yield {type: 'finished', output: null};
-    }
+  // Check for Finish
+  if (isFinalResponse(event)) {
+    // Determine output.
+    // We look for stateDelta outputKey or just the final text.
+    // But usually `finished` event just signals completion.
+    // For now, we yield a finished event with null output if not found.
+    // Ideally we extract the final result.
+    yield {type: AgentEventType.FINISHED, output: null};
   }
 }
 
