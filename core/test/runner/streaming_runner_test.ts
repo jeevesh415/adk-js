@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {
   AgentEventType,
   BaseAgent,
+  convertEventToAgentEvents,
   createEvent,
   Event,
   InMemoryArtifactService,
@@ -14,9 +16,7 @@ import {
   InvocationContext,
   LlmAgent,
   Runner,
-} from '@google/adk';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {convertEventToAgentEvents} from '../../src/runner/runner.js';
+} from '../../src/common.js';
 
 const TEST_APP_ID = 'test_app_id';
 const TEST_USER_ID = 'test_user_id';
@@ -243,9 +243,9 @@ describe('Runner Streaming and Stateless', () => {
       const event = createEvent({
         invocationId: 'id',
         author: 'model',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         content: {
           role: 'model',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           parts: [{text: 'Thinking...', thought: true} as any],
         },
       });

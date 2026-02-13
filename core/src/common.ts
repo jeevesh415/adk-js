@@ -66,6 +66,8 @@ export type {
   CodeExecutionResult,
   File,
 } from './code_executors/code_execution_utils.js';
+export {AgentEventType} from './events/agent_event.js';
+export type {AgentEvent} from './events/agent_event.js';
 export {
   createEvent,
   getFunctionCalls,
@@ -110,7 +112,7 @@ export type {
   ToolCallPolicyContext,
 } from './plugins/security_plugin.js';
 export {InMemoryRunner} from './runner/in_memory_runner.js';
-export {Runner} from './runner/runner.js';
+export {Runner, convertEventToAgentEvents} from './runner/runner.js';
 export type {RunnerConfig} from './runner/runner.js';
 export {InMemorySessionService} from './sessions/in_memory_session_service.js';
 export {createSession} from './sessions/session.js';
