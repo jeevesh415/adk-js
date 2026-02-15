@@ -8,6 +8,7 @@ import {FunctionCall, FunctionResponse} from '@google/genai';
 
 import {LlmResponse} from '../models/llm_response.js';
 
+import {toCamelCase, toSnakeCase} from '../utils/object_notation_utils.js';
 import {createEventActions, EventActions} from './event_actions.js';
 
 /**
@@ -176,4 +177,67 @@ export function createNewEventId(): string {
   }
 
   return id;
+}
+
+/**
+ * List of keys to preserve during snake_case to camelCase conversion.
+ *
+ * Example: `content.parts.functionCall.args`
+ * will be converted to be `content.parts.function_call.args` but the object
+ * inside of the `content.parts.function_call.args` will skip the conversion as it
+ * can contain data in any notation.
+ */
+const PRESERVE_KEYS_CAMEL_CASE = [
+  'actions.stateDelta',
+  'actions.artifactDelta',
+  'actions.requestedAuthConfigs',
+  'actions.requestedToolConfirmations',
+  'actions.customMetadata',
+  'content.parts.functionCall.args',
+  'content.parts.functionResponse.response',
+];
+
+/**
+ * List of keys to preserve during camelCase to snake_case conversion.
+ *
+ * Example: `content.parts.function_call.args`
+ * will be converted to be `content.parts.functionCall.args` but the object
+ * inside of the `content.parts.functionCall.args` will skip the conversion as it
+ * can contain data in any notation.
+ */
+const PRESERVE_KEYS_SNAKE_CASE = [
+  'actions.state_delta',
+  'actions.artifact_delta',
+  'actions.requested_auth_configs',
+  'actions.requested_tool_confirmations',
+  'actions.custom_metadata',
+  'content.parts.function_call.args',
+  'content.parts.function_response.response',
+];
+
+/**
+ * Transforms a snake_cased event object to a camelCased Event object.
+ *
+ * @param event The snake_cased event object.
+ * @returns The camelCased Event object.
+ */
+export function transformToCamelCaseEvent(
+  event: Record<string, unknown>,
+): Event {
+  return toCamelCase(event, PRESERVE_KEYS_SNAKE_CASE) as Event;
+}
+
+/**
+ * Transforms a camelCased event object to a snake_cased Event object.
+ *
+ * @param event The camelCased event object.
+ * @returns The snake_cased Event object.
+ */
+export function transformToSnakeCaseEvent(
+  event: Event,
+): Record<string, unknown> {
+  return toSnakeCase(event, PRESERVE_KEYS_CAMEL_CASE) as Record<
+    string,
+    unknown
+  >;
 }
