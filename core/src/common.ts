@@ -95,6 +95,7 @@ export type {ExecuteCodeParams} from './code_executors/base_code_executor.js';
 export {BuiltInCodeExecutor} from './code_executors/built_in_code_executor.js';
 export {
   CodeExecutionLanguage,
+  FileContentEncoding,
   type CodeExecutionInput,
   type CodeExecutionResult,
   type File,
