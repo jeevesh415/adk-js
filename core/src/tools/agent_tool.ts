@@ -151,19 +151,28 @@ export class AgentTool extends BaseTool {
       credentialService: toolContext.invocationContext.credentialService,
     });
 
-    const session = await runner.sessionService.createSession({
+    const session = await runner.sessionService.getOrCreateSession({
       appName: this.agent.name,
       userId: toolContext.invocationContext.userId,
       sessionId: toolContext.invocationContext.session.id,
       state: toolContext.state.toRecord(),
     });
 
+    if (toolContext.abortSignal?.aborted) {
+      return '';
+    }
+
     let lastEvent: Event | undefined;
     for await (const event of runner.runAsync({
       userId: session.userId,
       sessionId: session.id,
       newMessage: content,
+      abortSignal: toolContext.abortSignal,
     })) {
+      if (toolContext.abortSignal?.aborted) {
+        return;
+      }
+
       if (event.actions.stateDelta) {
         toolContext.state.update(event.actions.stateDelta);
       }
@@ -176,7 +185,9 @@ export class AgentTool extends BaseTool {
     }
 
     const hasOutputSchema = isLlmAgent(this.agent) && this.agent.outputSchema;
+    // Exclude thoughts from the merged text.
     const mergedText = lastEvent.content.parts
+      .filter((part) => !part.thought)
       .map((part) => part.text)
       .filter((text) => text)
       .join('\n');

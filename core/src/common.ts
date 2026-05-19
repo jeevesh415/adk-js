@@ -37,6 +37,7 @@ export type {
 export {LoopAgent, isLoopAgent} from './agents/loop_agent.js';
 export type {LoopAgentConfig} from './agents/loop_agent.js';
 export {ParallelAgent, isParallelAgent} from './agents/parallel_agent.js';
+export {AgentTransferLlmRequestProcessor} from './agents/processors/agent_transfer_llm_request_processor.js';
 export {
   BaseLlmRequestProcessor,
   BaseLlmResponseProcessor,
@@ -92,10 +93,12 @@ export {CredentialRefresherRegistry} from './auth/refresher/credential_refresher
 export {BaseCodeExecutor} from './code_executors/base_code_executor.js';
 export type {ExecuteCodeParams} from './code_executors/base_code_executor.js';
 export {BuiltInCodeExecutor} from './code_executors/built_in_code_executor.js';
-export type {
-  CodeExecutionInput,
-  CodeExecutionResult,
-  File,
+export {
+  CodeExecutionLanguage,
+  FileContentEncoding,
+  type CodeExecutionInput,
+  type CodeExecutionResult,
+  type File,
 } from './code_executors/code_execution_utils.js';
 export type {BaseContextCompactor} from './context/base_context_compactor.js';
 export type {BaseSummarizer} from './context/summarizers/base_summarizer.js';
@@ -144,6 +147,8 @@ export type {
 } from './memory/base_memory_service.js';
 export {InMemoryMemoryService} from './memory/in_memory_memory_service.js';
 export type {MemoryEntry} from './memory/memory_entry.js';
+export {VertexAiMemoryBankService} from './memory/vertex_ai_memory_bank_service.js';
+export type {VertexAiMemoryBankServiceOptions} from './memory/vertex_ai_memory_bank_service.js';
 export {ApigeeLlm} from './models/apigee_llm.js';
 export type {ApigeeLlmParams} from './models/apigee_llm.js';
 export {BaseLlm, isBaseLlm} from './models/base_llm.js';
@@ -206,6 +211,10 @@ export type {
   ToolInputParameters,
   ToolOptions,
 } from './tools/function_tool.js';
+export {
+  GOOGLE_MAPS_GROUNDING,
+  GoogleMapsGroundingTool,
+} from './tools/google_maps_grounding_tool.js';
 export {GOOGLE_SEARCH, GoogleSearchTool} from './tools/google_search_tool.js';
 export {
   LOAD_ARTIFACTS,
@@ -218,6 +227,16 @@ export {
   PreloadMemoryTool,
 } from './tools/preload_memory_tool.js';
 export {ToolConfirmation} from './tools/tool_confirmation.js';
+export {URL_CONTEXT, UrlContextTool} from './tools/url_context_tool.js';
+export {VertexAiSearchTool} from './tools/vertex_ai_search_tool.js';
+export type {
+  DataStoreParams,
+  SearchEngineParams,
+  VertexAISearchConfig,
+  VertexAISearchDataStoreSpec,
+  VertexAiSearchToolParams,
+} from './tools/vertex_ai_search_tool.js';
+export {VertexRagRetrievalTool} from './tools/vertex_rag_retrieval_tool.js';
 export {LogLevel, getLogger, setLogLevel, setLogger} from './utils/logger.js';
 export type {Logger} from './utils/logger.js';
 export {isGemini2OrAbove} from './utils/model_name.js';
@@ -226,8 +245,13 @@ export {GoogleLLMVariant} from './utils/variant_utils.js';
 export {version} from './version.js';
 
 export type {Frontmatter, Resources, Script, Skill} from './skills/skill.js';
+export {ListSkillsTool} from './tools/skill/list_skills_tool.js';
+export {LoadSkillResourceTool} from './tools/skill/load_skill_resource_tool.js';
+export {LoadSkillTool} from './tools/skill/load_skill_tool.js';
+export {SkillToolset} from './tools/skill/skill_toolset.js';
 
 export * from './artifacts/base_artifact_service.js';
+export * from './features/feature_registry.js';
 export * from './memory/base_memory_service.js';
 export * from './sessions/base_session_service.js';
 export * from './tools/base_tool.js';
